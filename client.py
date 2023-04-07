@@ -1,0 +1,62 @@
+import socket
+import threading
+
+# Define the server address and port
+SERVER_ADDRESS = 'localhost'
+SERVER_PORT = 12345
+
+
+def send_data(client_socket):
+    while True:
+        # Send data to the server
+        #message = input('Enter message: ')
+        client_socket.send(b'ok')
+
+        # Receive a response from the server
+        response = client_socket.recv(1024)
+        print(f'Ваш айди: {response.decode()}')
+        response = client_socket.recv(1024)
+        print(f'{response.decode()}')
+        client_socket.send(str("start").encode())
+        response = client_socket.recv(1024)
+        if response.decode()!="Okey:start":
+            print("err")
+            return
+        message = input('rock - 1; cisors - 2; paper - 3 : ')
+        client_socket.send(message.encode())
+
+        choosed = True
+        while choosed:
+            choosen = client_socket.recv(1024)
+            if choosen.decode()=="wait":
+                choosed = False
+            else:
+                message = input('rock - 1; cisors - 2; paper - 3 : ')
+                client_socket.send(message.encode())
+
+        finish = client_socket.recv(1024)
+        print(finish.decode())
+
+        reload = input("Хотите сыграть еще ? 1-да 0-нет: ")
+        if reload=="0":
+            exit()
+        print("===========================================")
+
+
+
+
+# Create a socket object
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to the server
+client_socket.connect((SERVER_ADDRESS, SERVER_PORT))
+
+# Start a new thread to send data to the server
+client_thread = threading.Thread(target=send_data, args=(client_socket,))
+client_thread.start()
+
+# Wait for the thread to finish
+client_thread.join()
+
+# Close the connection
+client_socket.close()
